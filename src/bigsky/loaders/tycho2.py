@@ -1,42 +1,29 @@
 import csv
-import sys
+import logging
+
 from pathlib import Path
 
 from peewee import *
 
 from bigsky.models import db, Star
+from bigsky.loaders.utils import parse_float, chunker
 
 ROOT = Path(__file__).resolve().parent.resolve().parent.resolve().parent
 
-
-
-def init_db(filename: str):
-    db.init(filename, pragmas={'journal_mode': 'wal'})
-    db.connect()
-    db.drop_tables([Star,])
-    db.create_tables([Star,])
-
-def parse_float(n, r=4):
-    return round(float(n or 0), r)
-
-def chunker(seq, size):
-    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('bigsky')
 
 def load_tycho_2(datapath: str):
     count = 0
     errors = 0
     hips = 0
-
-
     tychos = range(0, 19)
 
     for t in tychos:
 
         tycho_file = f'tyc2.dat.{t:02}'
         
-        print(tycho_file)
+        logger.info(tycho_file)
 
         with open(Path(datapath) / "tycho-2" / tycho_file, "r") as infile:
             reader = csv.reader(infile, delimiter='|')
@@ -74,16 +61,10 @@ def load_tycho_2(datapath: str):
                     Star.insert_many(group).execute()
 
 
-    print(f"Parsed {count} stars")
-    print(f"Found {hips} hips")
-    print(f"Total Errors: {str(errors)}")
+    logger.info(f"Parsed {count} stars")
+    logger.info(f"Found {hips} hips")
+    logger.info(f"Total Errors: {str(errors)}")
 
 
 
-if __name__ == "__main__":
-   raw_data_path = sys.argv[1]
-   output_filename = sys.argv[2]
-
-   init_db(output_filename)
-   load_tycho_2(raw_data_path)
 

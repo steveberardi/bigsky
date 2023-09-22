@@ -21,7 +21,7 @@ shell: venv/bin/activate
 	@PYTHONPATH=./src/ $(PYTHON)
 
 db: venv/bin/activate
-	@PYTHONPATH=./src/ $(PYTHON) src/bigsky/load.py raw/ dist/bigsky.db
+	@PYTHONPATH=./src/ $(PYTHON) src/bigsky/loaders/run.py raw/ dist/bigsky.db
 
 build: venv/bin/activate
 	$(PYTHON) -m flit build

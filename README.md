@@ -6,3 +6,6 @@ This repo contains the code for building and maintaing the Big Sky Catalog, whic
 - NGC (via OpenNGC)
 - IC (via OpenNGC)
 - Messier
+
+## License
+MIT
