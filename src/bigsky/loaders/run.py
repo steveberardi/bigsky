@@ -2,6 +2,7 @@ import sys
 
 from bigsky.loaders.utils import init_db
 from bigsky.loaders.tycho2 import load_tycho_2
+from bigsky.loaders.ongc import load_ongc
 
 
 if __name__ == "__main__":
@@ -9,4 +10,6 @@ if __name__ == "__main__":
    output_filename = sys.argv[2]
 
    init_db(output_filename)
+   load_ongc(raw_data_path)
    load_tycho_2(raw_data_path)
+

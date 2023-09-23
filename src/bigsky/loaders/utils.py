@@ -1,13 +1,13 @@
 from peewee import *
 
-from bigsky.models import db, Star
+from bigsky.models import db, Star, DeepSkyObject
 
 
 def init_db(filename: str):
     db.init(filename, pragmas={'journal_mode': 'wal'})
     db.connect()
-    db.drop_tables([Star,])
-    db.create_tables([Star,])
+    db.drop_tables([Star,DeepSkyObject])
+    db.create_tables([Star,DeepSkyObject])
 
 def parse_float(n, r=4):
     return round(float(n or 0), r)
