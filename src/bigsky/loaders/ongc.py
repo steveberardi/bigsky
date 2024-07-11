@@ -20,10 +20,22 @@ def ra_dec_to_float(ra, dec):
 
     return round(ra_f, 6), round(dec_f, 6)
 
+def parse_int(value):
+    value = value.strip()
+    if value:
+        return int(value)
+    else:
+        return None
+
 def load_ongc(datapath: str):
     count = 0
     errors = 0
     dsos = []
+    parsed = {
+        'm': set(),
+        'ic': set(),
+        'ngc': set(),
+    }
 
     for filename in filenames:
         with open(Path(datapath) / "ongc" / filename, "r") as infile:
@@ -34,21 +46,18 @@ def load_ongc(datapath: str):
                     desig = row.get("Name").strip()
                     names = (row.get("Common names") or "").split(",")
                     ra, dec = ra_dec_to_float(row.get("RA"), row.get("Dec"))
-                    messier = row.get("M")
+                    messier = parse_int(row.get("M"))
 
                     if desig.startswith("IC"):
                         ic = int(desig[2:])
-                        ngc = int(row.get("NGC")) if row.get("NGC") else None
+                        ngc = parse_int(row.get("NGC"))
                     elif desig.startswith("NGC"):
                         ngc = int(desig[3:])
-                        ic =  int(row.get("IC")) if row.get("IC") else None
+                        ic =  parse_int(row.get("IC"))
                     else:
                         print(f"Unknown desig: {desig}")
+
                     
-                    if messier:
-                        messier = int(messier)
-
-
                     dsos.append(
                         dict(
                             name=names,

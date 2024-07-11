@@ -2,13 +2,12 @@
 
 The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) catalogs:
 
-- Tycho-2 
-- Washington Double Star Catalog
+- Tycho-2
 - New General Catalogue (NGC)
 - Index Catalogue (IC)
 - Messier
 
-It's still a work in progress, but the catalog will be distributed as a SQLite database file, and there will also be a small Python ORM wrapper for working with the database.
+It's still a work in progress, but the catalog will be distributed in various formats (e.g. CSV), and there will also be a small Python ORM wrapper for working with the database.
 
 
 ## Data Sources
