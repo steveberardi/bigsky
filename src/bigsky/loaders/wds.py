@@ -1,11 +1,10 @@
-import csv
 import logging
 
 from pathlib import Path
 
 from peewee import *
 
-from bigsky.models import db, Star, DoubleStar
+from bigsky.models import db, DoubleStar
 from bigsky.loaders.utils import parse_float, chunker
 
 ROOT = Path(__file__).resolve().parent.resolve().parent.resolve().parent

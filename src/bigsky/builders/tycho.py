@@ -27,9 +27,6 @@ class Epoch:
     """Hipparcos Epoch"""
 
 
-# https://www.cosmos.esa.int/web/hipparcos/double-and-multiple-stars
-
-
 def parse_float(n, r=4):
     return round(float(n or 0), r)
 
@@ -41,13 +38,18 @@ def parse_hip(hip) -> tuple[int, str]:
     >>> parse_hip('39825C')
     (39825, 'C')
 
+    - The first element is the HIP id number
+    - Second element is the CCDM id (if applicable)
+
+    More info: https://www.cosmos.esa.int/web/hipparcos/double-and-multiple-stars
+
     """
     try:
         return int(hip), ""
     except:
         hip_id, ccdm, _ = re.split("([A-Z]+)", hip, flags=re.IGNORECASE)
 
-        return hip_id, ccdm
+        return int(hip_id), ccdm
 
 
 def load_hip_magnitudes() -> dict:

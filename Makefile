@@ -19,8 +19,8 @@ venv/bin/activate: requirements.txt
 shell: venv/bin/activate
 	@PYTHONPATH=./src/ $(PYTHON)
 
-tycho2: venv/bin/activate
-	@$(PYTHON) src/bigsky/parsers/tycho2.py
+tycho: venv/bin/activate
+	@$(PYTHON) src/bigsky/builders/tycho.py
 
 db: venv/bin/activate
 	@PYTHONPATH=./src/ $(PYTHON) src/bigsky/loaders/run.py raw/ dist/bigsky.db
