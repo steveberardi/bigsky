@@ -4,14 +4,13 @@ PYTHON=./venv/bin/python
 install: venv/bin/activate
 
 lint: venv/bin/activate
-	@$(PYTHON) -m flake8 src/
-	@$(PYTHON) -m mypy src/
+	@$(PYTHON) -m ruff check src/ $(ARGS)
 
 format: venv/bin/activate
 	@$(PYTHON) -m black src/ $(ARGS)
 
 test: venv/bin/activate
-	PYTHONPATH=./src/ $(PYTHON) -m pytest --cov=src/ --cov-report=term --cov-report=html .
+	PYTHONPATH=./src/ $(PYTHON) -m pytest --cov=src/ --cov-report=term --cov-report=html src/
 
 venv/bin/activate: requirements.txt
 	python -m venv venv
