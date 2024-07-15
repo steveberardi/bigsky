@@ -11,7 +11,8 @@ from bigsky.loaders.utils import parse_float, chunker
 ROOT = Path(__file__).resolve().parent.resolve().parent.resolve().parent
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('bigsky')
+logger = logging.getLogger("bigsky")
+
 
 def load_tycho_2(datapath: str):
     count = 0
@@ -21,12 +22,12 @@ def load_tycho_2(datapath: str):
 
     for t in tychos:
 
-        tycho_file = f'tyc2.dat.{t:02}'
-        
+        tycho_file = f"tyc2.dat.{t:02}"
+
         logger.info(tycho_file)
 
         with open(Path(datapath) / "tycho-2" / tycho_file, "r") as infile:
-            reader = csv.reader(infile, delimiter='|')
+            reader = csv.reader(infile, delimiter="|")
 
             stars = []
             for row in reader:
@@ -41,7 +42,7 @@ def load_tycho_2(datapath: str):
 
                     stars.append(
                         dict(
-                            name=f'star-{str(count)}',
+                            name=f"star-{str(count)}",
                             ra=ra,
                             dec=dec,
                             magnitude=mag,
@@ -55,16 +56,11 @@ def load_tycho_2(datapath: str):
                     raise
 
                 count += 1
-            
+
             for group in chunker(stars, 980):
                 with db.atomic():
                     Star.insert_many(group).execute()
 
-
     logger.info(f"Parsed {count} stars")
     logger.info(f"Found {hips} hips")
     logger.info(f"Total Errors: {str(errors)}")
-
-
-
-

@@ -11,7 +11,7 @@ from bigsky.loaders.utils import parse_float, chunker
 ROOT = Path(__file__).resolve().parent.resolve().parent.resolve().parent
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('bigsky')
+logger = logging.getLogger("bigsky")
 
 # name = CharField()
 #     ra = FloatField(index=False)
@@ -23,8 +23,9 @@ logger = logging.getLogger('bigsky')
 # example 000006.64+752859.8
 # Columns 113-130:    The hours, minutes, seconds and tenths of seconds (when
 #                     known) of Right Ascension for 2000, followed by the degrees,
-#                     minutes, and seconds of Declination for 2000, with + and - 
+#                     minutes, and seconds of Declination for 2000, with + and -
 #                     indicating north and south declinations.
+
 
 def parse_coords(coord_str: str) -> float:
     a, b, c = coord_str[:2], coord_str[2:4], coord_str[4:]
@@ -65,16 +66,11 @@ def load_wds(datapath: str):
                 ra = parse_coords(ra_str)
 
                 dec = parse_coords(dec_str[1:])
-                if dec_str[0] == '-':
+                if dec_str[0] == "-":
                     dec *= -1
 
                 double_stars.append(
-                    dict(
-                        name=f'double-{str(count)}',
-                        ra=ra,
-                        dec=dec,
-                        wds_id=wds_id
-                    )
+                    dict(name=f"double-{str(count)}", ra=ra, dec=dec, wds_id=wds_id)
                 )
 
             except Exception as e:
@@ -84,18 +80,13 @@ def load_wds(datapath: str):
                 # raise
 
             count += 1
-        
+
         # insert records
         for group in chunker(double_stars, 980):
             with db.atomic():
                 DoubleStar.insert_many(group).execute()
 
-
     logger.info(f"Parsed {count} double stars")
     logger.info(f"Found {hips} hips")
     logger.info(f"Dupes = {len(dupes)}")
     logger.info(f"Total Errors: {str(errors)}")
-
-
-
-

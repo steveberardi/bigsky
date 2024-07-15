@@ -11,7 +11,8 @@ from bigsky.loaders.utils import parse_float, chunker
 ROOT = Path(__file__).resolve().parent.resolve().parent.resolve().parent
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('bigsky')
+logger = logging.getLogger("bigsky")
+
 
 def ra_dec_to_float(ra, dec):
     ra_h, ra_m, ra_s = [float(d) for d in ra.split(" ")]
@@ -26,13 +27,14 @@ def ra_dec_to_float(ra, dec):
 def parse_float(n, r=4):
     return round(float(n or 0), r)
 
+
 def load_tycho_1(datapath: str):
     count = 0
     errors = 0
     hips = 0
 
     with open(Path(datapath) / "tycho-1" / "tyc_main.dat", "r") as infile:
-        reader = csv.reader(infile, delimiter='|')
+        reader = csv.reader(infile, delimiter="|")
 
         stars = []
 
@@ -46,7 +48,7 @@ def load_tycho_1(datapath: str):
 
                 stars.append(
                     dict(
-                        name=f'star-{str(count)}',
+                        name=f"star-{str(count)}",
                         ra=ra,
                         dec=dec,
                         magnitude=parse_float(mag, r=2),
@@ -62,11 +64,10 @@ def load_tycho_1(datapath: str):
                 raise
 
             count += 1
-        
+
         for group in chunker(stars, 980):
             with db.atomic():
                 Star.insert_many(group).execute()
-
 
     print(f"Parsed {count} stars")
     print(f"{hips} hips")

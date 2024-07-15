@@ -2,9 +2,11 @@ from peewee import *
 
 db = SqliteDatabase(None)
 
+
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class Star(BaseModel):
     name = CharField()
@@ -39,5 +41,5 @@ class DoubleStar(BaseModel):
     name = CharField()
     ra = FloatField(index=False)
     dec = FloatField(index=False)
-    hip = ForeignKeyField(Star, backref='double_star', null=True)
+    hip = ForeignKeyField(Star, backref="double_star", null=True)
     wds_id = CharField(unique=True, null=True)
