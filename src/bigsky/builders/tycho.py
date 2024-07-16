@@ -7,6 +7,33 @@ from dataclasses import dataclass
 
 from skyfield.api import Star, load
 
+__version__ = "0.1.0"
+
+"""
+
+    tyc_id: Tycho ID, formatted as a string with hyphens (e.g. 0006-01005-1)
+    
+    hip_id: Hipparcos ID
+
+    ccdm: CCDM Component Identifier
+
+    magnitude: Visual apparent magnitude, calculated from BT/VT
+
+    bv: BV Color Index
+
+    ra_degrees_j2000: Right Ascension in degrees (0 to 360) and Epoch J2000.0
+
+    dec_degrees_j2000: Declination in degrees (-90 to 90) and Epoch J2000.0
+
+    ra_mas_per_year:
+
+    dec_mas_per_year:
+
+    parallax_mas:
+
+"""
+
+
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.resolve().parent.resolve().parent.resolve()
 
@@ -31,7 +58,7 @@ class Epoch:
 @dataclass
 class StarRow:
     tyc_id: str
-    ra_hours_j2000: float
+    ra_degrees_j2000: float
     dec_degrees_j2000: float
     ra_mas_per_year: float
     dec_mas_per_year: float
@@ -50,7 +77,7 @@ class StarRow:
             "ccdm",
             "magnitude",
             "bv",
-            "ra_hours_j2000",
+            "ra_degrees_j2000",
             "dec_degrees_j2000",
             "ra_mas_per_year",
             "dec_mas_per_year",
@@ -60,14 +87,14 @@ class StarRow:
     def to_row(self, r0=2, r1=4):
         def rounded(val, r):
             return round(val, r) if val else val
-        
+
         return [
             self.tyc_id,
             self.hip_id,
             self.ccdm,
             rounded(self.magnitude, r0),
             rounded(self.bv, r0),
-            rounded(self.ra_hours_j2000, r1),
+            rounded(self.ra_degrees_j2000, r1),
             rounded(self.dec_degrees_j2000, r1),
             rounded(self.ra_mas_per_year, r1),
             rounded(self.dec_mas_per_year, r1),
@@ -109,7 +136,7 @@ class StarRow:
             ccdm=ccdm,
             magnitude=mag,
             bv=bv,
-            ra_hours_j2000=ra,
+            ra_degrees_j2000=ra,
             dec_degrees_j2000=dec,
             ra_mas_per_year=ra_mas_per_year,
             dec_mas_per_year=dec_mas_per_year,
@@ -165,7 +192,7 @@ class StarRow:
             ccdm=ccdm,
             magnitude=mag,
             bv=bv,
-            ra_hours_j2000=ra,
+            ra_degrees_j2000=ra,
             dec_degrees_j2000=dec,
             ra_mas_per_year=ra_mas_per_year,
             dec_mas_per_year=dec_mas_per_year,
@@ -217,11 +244,13 @@ hipmags = load_hip_magnitudes()
 
 def format_tyc(tyc) -> str:
     """
-    Formats Tycho ID to its standard designation format: adding hyphens between each TYC number.
+    Formats Tycho ID to its standard designation format: adding hyphens between each TYC number, and removes leading zeroes.
 
-    Example: 8479451 -> '8479-45-1'
+    Examples: 
+        8479451 -> '8479-45-1'
+        008479451 -> '8479-45-1'
     """
-    return "-".join(tyc.split(" "))
+    return "-".join([str(int(i)) for i in tyc.split(" ")])
 
 
 def to_j2000(ra_degrees, dec_degrees, ra_mas_per_year, dec_mas_per_year):
@@ -296,7 +325,6 @@ if __name__ == "__main__":
     count = 0
     errors = 0
     no_radec = 0
-    hips = []
     tychos = range(0, 20)
 
     for row in tycho2_rows():
@@ -309,10 +337,7 @@ if __name__ == "__main__":
                 no_radec += 1
                 continue
 
-            if output_row.hip_id:
-                hip_stars[output_row.hip_id].append(output_row.to_row())
-            else:
-                writer.writerow(output_row.to_row())
+            writer.writerow(output_row.to_row())
 
         except Exception as e:
             print(f"Error on row {str(count+1)}")
@@ -334,27 +359,17 @@ if __name__ == "__main__":
                     no_radec += 1
                     continue
 
-                if output_row.hip_id:
-                    hip_stars[output_row.hip_id].append(output_row.to_row())
-                else:
-                    writer.writerow(output_row.to_row())
+                writer.writerow(output_row.to_row())
 
             except Exception as e:
                 print(f"Error on row {str(count+1)}")
                 print(e)
                 errors += 1
 
-    hc = 0
-    for hip_id, values in hip_stars.items():
-        values.sort(key=lambda val: val[1])
-        for v in values:
-            writer.writerow(v)
-            hc += 1
-
     outfile.close()
 
     print(f"Parsed {count} stars")
-    
+
     print(f"Skipped {no_radec} no radec")
 
     print(f"Total Errors: {str(errors)}")
