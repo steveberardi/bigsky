@@ -3,6 +3,7 @@ import re
 import os
 from pathlib import Path
 from collections import defaultdict
+from dataclasses import dataclass
 
 from skyfield.api import Star, load
 
@@ -25,6 +26,151 @@ class Epoch:
 
     J_1991_25 = ts.tt(1991.25)
     """Hipparcos Epoch"""
+
+
+@dataclass
+class StarRow:
+    tyc_id: str
+    ra_hours_j2000: float
+    dec_degrees_j2000: float
+    ra_mas_per_year: float
+    dec_mas_per_year: float
+    magnitude: float
+
+    hip_id: int = None
+    ccdm: str = None
+    bv: float = None
+    parallax_mas: float = None
+
+    @staticmethod
+    def header():
+        return [
+            "tyc_id",
+            "hip_id",
+            "ccdm",
+            "magnitude",
+            "bv",
+            "ra_hours_j2000",
+            "dec_degrees_j2000",
+            "ra_mas_per_year",
+            "dec_mas_per_year",
+            "parallax_mas",
+        ]
+
+    def to_row(self, r0=2, r1=4):
+        def rounded(val, r):
+            return round(val, r) if val else val
+        
+        return [
+            self.tyc_id,
+            self.hip_id,
+            self.ccdm,
+            rounded(self.magnitude, r0),
+            rounded(self.bv, r0),
+            rounded(self.ra_hours_j2000, r1),
+            rounded(self.dec_degrees_j2000, r1),
+            rounded(self.ra_mas_per_year, r1),
+            rounded(self.dec_mas_per_year, r1),
+            self.parallax_mas,
+        ]
+
+    @staticmethod
+    def from_tyc2(row):
+        def col(i):
+            return row[i].strip()
+
+        def col_f(i):
+            return parse_float(col(i))
+
+        # Observed RA/DEC
+        ra = col_f(24)  # 0-360 deg
+        dec = col_f(25)
+
+        if not ra or not dec:
+            return None
+
+        ra_mas_per_year = col_f(4)
+        dec_mas_per_year = col_f(5)
+        ra, dec = to_j2000(ra, dec, ra_mas_per_year, dec_mas_per_year)
+
+        mag_bt = col_f(17)
+        mag_vt = col_f(19)
+        bv, mag = tycho2_bv_v(mag_bt, mag_vt)
+
+        hip_id = col(23)
+        ccdm = None
+        if hip_id:
+            hip_id, ccdm = parse_hip(hip_id)
+            mag = hipmags.get(hip_id) or mag
+
+        return StarRow(
+            tyc_id=format_tyc(col(0)),
+            hip_id=hip_id,
+            ccdm=ccdm,
+            magnitude=mag,
+            bv=bv,
+            ra_hours_j2000=ra,
+            dec_degrees_j2000=dec,
+            ra_mas_per_year=ra_mas_per_year,
+            dec_mas_per_year=dec_mas_per_year,
+            parallax_mas=None,  # TODO
+        )
+
+    @staticmethod
+    def from_supp(row):
+        def col(i):
+            return row[i].strip()
+
+        def col_f(i):
+            return parse_float(col(i))
+
+        ra = col_f(2)  # 0-360 deg
+        dec = col_f(3)
+        ra_mas_per_year = col_f(4)
+        dec_mas_per_year = col_f(5)
+
+        if not ra or not dec:
+            return None
+
+        star_kwargs = {}
+        if ra_mas_per_year:
+            star_kwargs["ra_mas_per_year"] = ra_mas_per_year
+        if dec_mas_per_year:
+            star_kwargs["dec_mas_per_year"] = dec_mas_per_year
+
+        star = Star(
+            ra_hours=ra / 15,
+            dec_degrees=dec,
+            epoch=Epoch.J_1991_25,
+            **star_kwargs,
+        )
+
+        _ra, _dec, _distance = earth.at(Epoch.J_2000).observe(star).radec()
+        ra = _ra._degrees
+        dec = _dec.degrees
+
+        mag_bt = col_f(11)
+        mag_vt = col_f(13)
+        bv, mag = tycho2_bv_v(mag_bt, mag_vt)
+
+        hip_id = col(17)
+        ccdm = None
+        if hip_id:
+            hip_id, ccdm = parse_hip(hip_id)
+            mag = hipmags.get(hip_id) or mag
+
+        return StarRow(
+            tyc_id=format_tyc(col(0)),
+            hip_id=hip_id,
+            ccdm=ccdm,
+            magnitude=mag,
+            bv=bv,
+            ra_hours_j2000=ra,
+            dec_degrees_j2000=dec,
+            ra_mas_per_year=ra_mas_per_year,
+            dec_mas_per_year=dec_mas_per_year,
+            parallax_mas=None,  # TODO
+        )
 
 
 def parse_float(n, r=4):
@@ -78,13 +224,6 @@ def format_tyc(tyc) -> str:
     return "-".join(tyc.split(" "))
 
 
-# iterate through all, defer hips to dict (key is hip int)
-#   value = [ ["CCDM", ...], ... ]
-# iterate through hip dict:
-# sort values by CCDM
-# first value is primary
-
-
 def to_j2000(ra_degrees, dec_degrees, ra_mas_per_year, dec_mas_per_year):
     """
     Converts star epoch from J1991.25 (Hipparcos) to J2000
@@ -111,202 +250,95 @@ def to_j2000(ra_degrees, dec_degrees, ra_mas_per_year, dec_mas_per_year):
     return ra, dec
 
 
+def tycho2_bv_v(mag_bt, mag_vt) -> tuple[float, float]:
+    """
+    Calculates B-V and Johnson V magnitude from Tycho-2 data.
+
+    From Tycho-2 Readme:
+        Note (7):
+        Blank when no magnitude is available. Either BTmag or VTmag is
+        always given. Approximate Johnson photometry may be obtained as:
+
+            V   = VT - 0.090 * (BT-VT)
+            B-V = 0.850 * (BT-VT)
+
+        Consult Sect 1.3 of Vol 1 of "The Hipparcos and Tycho Catalogues",
+        ESA SP-1200, 1997, for details.
+    """
+
+    if mag_bt is None or mag_vt is None:
+        return None, mag_vt or mag_bt
+
+    bv = 0.850 * (mag_bt - mag_vt)
+    mag = mag_vt - 0.09 * (mag_bt - mag_vt)
+
+    return bv, mag
+
+
+def tycho2_rows():
+    for t in range(0, 20):
+        tycho_file = f"tyc2.dat.{t:02}"
+        print(tycho_file)
+        with open(DATA_PATH / "tycho-2" / tycho_file, "r") as infile:
+            reader = csv.reader(infile, delimiter="|")
+            for row in reader:
+                yield row
+
+
 if __name__ == "__main__":
 
     hip_stars = defaultdict(list)
 
     outfile = open(BUILD_PATH / "tycho2.stars.csv", "w")
     writer = csv.writer(outfile)
-
-    writer.writerow(
-        [
-            "tyc_id",
-            "hip_id",
-            "ccdm",
-            "magnitude",
-            "bv",
-            "ra_hours_j2000",
-            "dec_degrees_j2000",
-            "ra_mas_per_year",
-            "dec_mas_per_year",
-        ]
-    )
+    writer.writerow(StarRow.header())
 
     count = 0
     errors = 0
     no_radec = 0
     hips = []
-    tycho1_ctr = 0
     tychos = range(0, 20)
-    mag_max = 0
 
-    for t in tychos:
+    for row in tycho2_rows():
+        count += 1
 
-        tycho_file = f"tyc2.dat.{t:02}"
+        try:
+            output_row = StarRow.from_tyc2(row)
 
-        print(tycho_file)
+            if output_row is None:
+                no_radec += 1
+                continue
 
-        with open(DATA_PATH / "tycho-2" / tycho_file, "r") as infile:
-            reader = csv.reader(infile, delimiter="|")
+            if output_row.hip_id:
+                hip_stars[output_row.hip_id].append(output_row.to_row())
+            else:
+                writer.writerow(output_row.to_row())
 
-            for row in reader:
-                try:
-                    tyc = format_tyc(row[0].strip())
-                    hip = row[23].strip()
-                    tycho1 = row[22].strip()
-
-                    if tycho1:
-                        tycho1_ctr += 1
-                        # continue
-
-                    # Mean RA/DEC
-                    # ra = parse_float(row[2].strip())  # 0-360 deg
-                    # dec = parse_float(row[3].strip())
-
-                    # Observed RA/DEC
-                    ra = parse_float(row[24].strip())  # 0-360 deg
-                    dec = parse_float(row[25].strip())
-
-                    if not ra or not dec:
-                        no_radec += 1
-                        continue
-
-                    ra_mas_per_year = parse_float(row[4].strip())
-                    dec_mas_per_year = parse_float(row[5].strip())
-                    ra, dec = to_j2000(ra, dec, ra_mas_per_year, dec_mas_per_year)
-
-                    mag_bt = row[17].strip()
-                    mag_vt = row[19].strip()
-                    mag = mag_vt or mag_bt
-
-                    if parse_float(mag) > mag_max:
-                        mag_max = parse_float(mag)
-
-                    bv = None
-
-                    if mag_bt and mag_vt:
-                        #  B-V = 0.850*(BT-VT)
-                        bv = 0.850 * (parse_float(mag_bt) - parse_float(mag_vt))
-
-                    if hip:
-                        hip, ccdm = parse_hip(hip)
-                        mag = hipmags.get(hip) or mag
-                        hip_stars[hip].append(
-                            [
-                                tyc,
-                                hip,
-                                ccdm,
-                                parse_float(mag, 2),
-                                parse_float(bv, r=2),
-                                parse_float(ra),
-                                parse_float(dec),
-                                ra_mas_per_year,
-                                dec_mas_per_year,
-                            ]
-                        )
-                    else:
-                        writer.writerow(
-                            [
-                                tyc,
-                                hip,
-                                "",
-                                parse_float(mag, 2),
-                                parse_float(bv, 2),
-                                parse_float(ra),
-                                parse_float(dec),
-                                ra_mas_per_year,
-                                dec_mas_per_year,
-                            ]
-                        )
-
-                except Exception as e:
-                    print(f"Error on row {str(count+1)}")
-                    print(e)
-                    errors += 1
-                    # raise
-
-                count += 1
+        except Exception as e:
+            print(f"Error on row {str(count+1)}")
+            print(e)
+            errors += 1
+            if errors > 10:
+                raise
 
     with open(DATA_PATH / "tycho-2" / "suppl_1.dat", "r") as supfile:
         reader = csv.reader(supfile, delimiter="|")
 
         for row in reader:
+            count += 1
+
             try:
-                tyc = format_tyc(row[0].strip())
-                hip = row[17].strip()
+                output_row = StarRow.from_supp(row)
 
-                ra = parse_float(row[2].strip())  # 0-360 deg
-                dec = parse_float(row[3].strip())
-
-                ra_mas_per_year = parse_float(row[4].strip())
-                dec_mas_per_year = parse_float(row[5].strip())
-
-                if not ra or not dec:
+                if output_row is None:
                     no_radec += 1
                     continue
 
-                star_kwargs = {}
-                if ra_mas_per_year:
-                    star_kwargs["ra_mas_per_year"] = ra_mas_per_year
-                if dec_mas_per_year:
-                    star_kwargs["dec_mas_per_year"] = dec_mas_per_year
-
-                star = Star(
-                    ra_hours=ra / 15,
-                    dec_degrees=dec,
-                    epoch=Epoch.J_1991_25,
-                    **star_kwargs,
-                )
-
-                _ra, _dec, distance = earth.at(Epoch.J_2000).observe(star).radec()
-                ra = _ra._degrees
-                dec = _dec.degrees
-
-                mag_bt = parse_float(row[11].strip())
-                mag_vt = parse_float(row[13].strip())
-
-                bv = None
-
-                if mag_bt and mag_vt:
-                    # B-V = 0.850*(BT-VT)
-                    # V = VT -0.090*(BT-VT)
-                    bv = 0.850 * (mag_bt - mag_vt)
-                    mag = mag_vt - 0.09 * (mag_bt - mag_vt)
+                if output_row.hip_id:
+                    hip_stars[output_row.hip_id].append(output_row.to_row())
                 else:
-                    mag = mag_vt or mag_bt
+                    writer.writerow(output_row.to_row())
 
-                if hip:
-                    hip, ccdm = parse_hip(hip)
-                    mag = hipmags.get(hip) or mag
-                    hip_stars[hip].append(
-                        [
-                            tyc,
-                            hip,
-                            ccdm,
-                            parse_float(mag, 2),
-                            parse_float(bv, r=2),
-                            ra,
-                            dec,
-                            ra_mas_per_year,
-                            dec_mas_per_year,
-                        ]
-                    )
-                else:
-                    writer.writerow(
-                        [
-                            tyc,
-                            hip,
-                            "",
-                            parse_float(mag, 2),
-                            parse_float(bv, r=2),
-                            ra,
-                            dec,
-                            ra_mas_per_year,
-                            dec_mas_per_year,
-                        ]
-                    )
-
-                count += 1
             except Exception as e:
                 print(f"Error on row {str(count+1)}")
                 print(e)
@@ -314,7 +346,7 @@ if __name__ == "__main__":
 
     hc = 0
     for hip_id, values in hip_stars.items():
-        values.sort(key=lambda val: val[2])
+        values.sort(key=lambda val: val[1])
         for v in values:
             writer.writerow(v)
             hc += 1
@@ -322,13 +354,7 @@ if __name__ == "__main__":
     outfile.close()
 
     print(f"Parsed {count} stars")
-    print(f"... {len(hip_stars.keys())} hips")
-    print(f"... {hc} total hips")
-    print(f"... {tycho1_ctr} Tycho-1")
-
+    
     print(f"Skipped {no_radec} no radec")
 
-    print(f"max mag = {mag_max}")
     print(f"Total Errors: {str(errors)}")
-
-    print(hips)
