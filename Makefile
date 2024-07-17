@@ -20,8 +20,9 @@ shell: venv/bin/activate
 	@PYTHONPATH=./src/ $(PYTHON)
 
 tycho: venv/bin/activate
+	@mkdir -p build
 	@$(PYTHON) src/bigsky/builders/tycho.py
-	gzip -fk build/tycho2.stars.csv
+	@gzip -fk build/tycho2.stars.csv
 
 db: venv/bin/activate
 	@PYTHONPATH=./src/ $(PYTHON) src/bigsky/loaders/run.py raw/ dist/bigsky.db

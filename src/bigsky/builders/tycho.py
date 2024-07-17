@@ -124,14 +124,18 @@ class StarRow:
         mag_vt = col_f(19)
         bv, mag = tycho2_bv_v(mag_bt, mag_vt)
 
+        tyc_id = format_tyc(col(0))
         hip_id = col(23)
         ccdm = None
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
-            mag = hipmags.get(hip_id) or mag
+            mag = HIP_MAG.get(hip_id) or mag
+            parallax_mas = PLX.get(hip_id) or None
+        else:
+            parallax_mas = PLX.get(tyc_id) or None
 
         return StarRow(
-            tyc_id=format_tyc(col(0)),
+            tyc_id=tyc_id,
             hip_id=hip_id,
             ccdm=ccdm,
             magnitude=mag,
@@ -140,7 +144,7 @@ class StarRow:
             dec_degrees_j2000=dec,
             ra_mas_per_year=ra_mas_per_year,
             dec_mas_per_year=dec_mas_per_year,
-            parallax_mas=None,  # TODO
+            parallax_mas=parallax_mas,
         )
 
     @staticmethod
@@ -180,14 +184,18 @@ class StarRow:
         mag_vt = col_f(13)
         bv, mag = tycho2_bv_v(mag_bt, mag_vt)
 
+        tyc_id = format_tyc(col(0))
         hip_id = col(17)
         ccdm = None
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
-            mag = hipmags.get(hip_id) or mag
+            mag = HIP_MAG.get(hip_id) or mag
+            parallax_mas = PLX.get(hip_id) or None
+        else:
+            parallax_mas = PLX.get(tyc_id) or None
 
         return StarRow(
-            tyc_id=format_tyc(col(0)),
+            tyc_id=tyc_id,
             hip_id=hip_id,
             ccdm=ccdm,
             magnitude=mag,
@@ -196,7 +204,7 @@ class StarRow:
             dec_degrees_j2000=dec,
             ra_mas_per_year=ra_mas_per_year,
             dec_mas_per_year=dec_mas_per_year,
-            parallax_mas=None,  # TODO
+            parallax_mas=parallax_mas,
         )
 
 
@@ -239,18 +247,38 @@ def load_hip_magnitudes() -> dict:
     return hipmags
 
 
-hipmags = load_hip_magnitudes()
+def load_tycho1_parallax() -> dict:
+    """Returns dictionary where the key is the HIP id and value is its visual magnitude from Tycho-1"""
+
+    parallax = {}
+    with open(DATA_PATH / "tycho-1" / "hip_main.dat", "r") as hipfile:
+        reader = csv.reader(hipfile, delimiter="|")
+
+        for row in reader:
+            hip = int(row[1].strip())
+            parallax_mas = parse_float(row[11].strip(), 2)
+            parallax[hip] = parallax_mas
+
+    with open(DATA_PATH / "tycho-1" / "tyc_main.dat", "r") as tycfile:
+        reader = csv.reader(tycfile, delimiter="|")
+
+        for row in reader:
+            tyc = format_tyc(row[1].strip())
+            parallax_mas = parse_float(row[11].strip(), 2)
+            parallax[tyc] = parallax_mas
+
+    return parallax
 
 
 def format_tyc(tyc) -> str:
     """
     Formats Tycho ID to its standard designation format: adding hyphens between each TYC number, and removes leading zeroes.
 
-    Examples: 
+    Examples:
         8479451 -> '8479-45-1'
         008479451 -> '8479-45-1'
     """
-    return "-".join([str(int(i)) for i in tyc.split(" ")])
+    return "-".join([str(int(i)) for i in tyc.split(" ") if i != ""])
 
 
 def to_j2000(ra_degrees, dec_degrees, ra_mas_per_year, dec_mas_per_year):
@@ -313,6 +341,9 @@ def tycho2_rows():
             for row in reader:
                 yield row
 
+
+PLX = load_tycho1_parallax()
+HIP_MAG = load_hip_magnitudes()
 
 if __name__ == "__main__":
 

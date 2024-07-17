@@ -30,7 +30,6 @@ def test_parse_hip(value, expected):
     assert parse_hip(value) == expected
 
 
-
 @pytest.mark.parametrize(
     "value,expected",
     [
