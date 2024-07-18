@@ -2,7 +2,9 @@
 
 The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) catalogs, tailored for the purpose of visual observation of our beautiful night sky. Currently, it includes the following objects:
 
-- 2,557,499 stars from the Tycho-2 catalog
+|   | Count  | Sources |
+|---|---|---|
+| **Stars** | 2,557,499  | Tycho-2 |
 
 Future versions will include objects from these catalogs:
 
@@ -10,6 +12,7 @@ Future versions will include objects from these catalogs:
 - New General Catalogue (NGC)
 - Index Catalogue (IC)
 - Washington Double Star Catalog (WDS)
+- Gaia DR3
 
 It's still very much a work in progress! Help is wanted and appreciated :)
 
@@ -27,4 +30,4 @@ It's still very much a work in progress! Help is wanted and appreciated :)
 - [Sky Atlas](https://skyatlas.app)
 
 ## License
-[MIT License](https://github.com/steveberardi/bigsky/blob/main/LICENSE)
+[MIT](https://github.com/steveberardi/bigsky/blob/main/LICENSE)
