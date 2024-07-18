@@ -331,15 +331,17 @@ def tycho2_bv_v(mag_bt, mag_vt) -> tuple[float, float]:
 
     return bv, mag
 
+def tycho2_read(filename):
+    with open(filename, "r") as infile:
+        reader = csv.reader(infile, delimiter="|")
+        for row in reader:
+            yield row
 
 def tycho2_rows():
     for t in range(0, 20):
         tycho_file = f"tyc2.dat.{t:02}"
         print(tycho_file)
-        with open(DATA_PATH / "tycho-2" / tycho_file, "r") as infile:
-            reader = csv.reader(infile, delimiter="|")
-            for row in reader:
-                yield row
+        yield from tycho2_read(DATA_PATH / "tycho-2" / tycho_file)
 
 
 PLX = load_tycho1_parallax()
@@ -350,8 +352,13 @@ if __name__ == "__main__":
     hip_stars = defaultdict(list)
 
     outfile = open(BUILD_PATH / "tycho2.stars.csv", "w")
+    outfile_mag11 = open(BUILD_PATH / "tycho2.stars.mag11.csv", "w")
+    
     writer = csv.writer(outfile)
+    writer_mag11 = csv.writer(outfile_mag11)
+
     writer.writerow(StarRow.header())
+    writer_mag11.writerow(StarRow.header())
 
     count = 0
     errors = 0
@@ -369,6 +376,9 @@ if __name__ == "__main__":
                 continue
 
             writer.writerow(output_row.to_row())
+
+            if output_row.magnitude <= 11:
+                writer_mag11.writerow(output_row.to_row())
 
         except Exception as e:
             print(f"Error on row {str(count+1)}")
@@ -391,6 +401,9 @@ if __name__ == "__main__":
                     continue
 
                 writer.writerow(output_row.to_row())
+
+                if output_row.magnitude <= 11:
+                    writer_mag11.writerow(output_row.to_row())
 
             except Exception as e:
                 print(f"Error on row {str(count+1)}")

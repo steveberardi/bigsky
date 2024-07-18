@@ -1,6 +1,6 @@
-# <img src="https://raw.githubusercontent.com/steveberardi/bigsky/main/docs/images/logo.svg" width="48" style="vertical-align:middle"> Big Sky Catalog
+# <img src="https://raw.githubusercontent.com/steveberardi/bigsky/main/docs/images/logo.svg" width="36" style="vertical-align:middle"> Big Sky Catalog
 
-The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) catalogs, tailored for the purpose of visual observation. Currently, it includes the following objects:
+The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) catalogs, tailored for the purpose of visual observation of our beautiful night sky. Currently, it includes the following objects:
 
 - 2,557,499 stars from the Tycho-2 catalog
 
@@ -22,6 +22,9 @@ It's still very much a work in progress! Help is wanted and appreciated :)
 | Index Catalogue (IC) | [OpenNGC](https://github.com/mattiaverga/OpenNGC)  |
 | Messier | [OpenNGC](https://github.com/mattiaverga/OpenNGC)   |
 
+## Related Projects
+- [Starplot](https://github.com/steveberardi/starplot)
+- [Sky Atlas](https://skyatlas.app)
 
 ## License
-MIT
+[MIT License](https://github.com/steveberardi/bigsky/blob/main/LICENSE)
