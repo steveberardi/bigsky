@@ -54,6 +54,9 @@ class Epoch:
     J_1991_25 = ts.tt(1991.25)
     """Hipparcos Epoch"""
 
+    def create(year):
+        return ts.tt(year)
+
 
 @dataclass
 class StarRow:
@@ -113,12 +116,22 @@ class StarRow:
         ra = col_f(24)  # 0-360 deg
         dec = col_f(25)
 
+        """
+        Observed RA/DEC have variable epochs for RA/DEC
+
+        See page 12 of 'Construction and verification of the Tycho-2 Catalogue'
+        https://ui.adsabs.harvard.edu/abs/2000A%26A...357..367H/abstract
+        
+        We use a somewhat naive approach here that uses the midpoint between the epochs
+        of RA and DEC and add that to the base epoch 1990. 
+        """
+
+        epoch_ra = col_f(26)
+        epoch_dec = col_f(27)
+        epoch = 1990 + (epoch_ra + epoch_dec) / 2
+
         if not ra or not dec:
             return None
-
-        ra_mas_per_year = col_f(4)
-        dec_mas_per_year = col_f(5)
-        ra, dec = to_j2000(ra, dec, ra_mas_per_year, dec_mas_per_year)
 
         mag_bt = col_f(17)
         mag_vt = col_f(19)
@@ -133,6 +146,17 @@ class StarRow:
             parallax_mas = PLX.get(hip_id) or None
         else:
             parallax_mas = PLX.get(tyc_id) or None
+
+        ra_mas_per_year = col_f(4)
+        dec_mas_per_year = col_f(5)
+        ra, dec = to_j2000(
+            ra,
+            dec,
+            ra_mas_per_year,
+            dec_mas_per_year,
+            parallax_mas=parallax_mas,
+            epoch=Epoch.create(epoch),
+        )
 
         return StarRow(
             tyc_id=tyc_id,
@@ -163,23 +187,6 @@ class StarRow:
         if not ra or not dec:
             return None
 
-        star_kwargs = {}
-        if ra_mas_per_year:
-            star_kwargs["ra_mas_per_year"] = ra_mas_per_year
-        if dec_mas_per_year:
-            star_kwargs["dec_mas_per_year"] = dec_mas_per_year
-
-        star = Star(
-            ra_hours=ra / 15,
-            dec_degrees=dec,
-            epoch=Epoch.J_1991_25,
-            **star_kwargs,
-        )
-
-        _ra, _dec, _distance = earth.at(Epoch.J_2000).observe(star).radec()
-        ra = _ra._degrees
-        dec = _dec.degrees
-
         mag_bt = col_f(11)
         mag_vt = col_f(13)
         bv, mag = tycho2_bv_v(mag_bt, mag_vt)
@@ -193,6 +200,15 @@ class StarRow:
             parallax_mas = PLX.get(hip_id) or None
         else:
             parallax_mas = PLX.get(tyc_id) or None
+
+        ra, dec = to_j2000(
+            ra,
+            dec,
+            ra_mas_per_year,
+            dec_mas_per_year,
+            parallax_mas=parallax_mas,
+            epoch=Epoch.J_1991_25,  # ALL stars in Supplement-1 are at epoch J1991.25
+        )
 
         return StarRow(
             tyc_id=tyc_id,
@@ -281,9 +297,16 @@ def format_tyc(tyc) -> str:
     return "-".join([str(int(i)) for i in tyc.split(" ") if i != ""])
 
 
-def to_j2000(ra_degrees, dec_degrees, ra_mas_per_year, dec_mas_per_year):
+def to_j2000(
+    ra_degrees,
+    dec_degrees,
+    ra_mas_per_year,
+    dec_mas_per_year,
+    parallax_mas=None,
+    epoch=Epoch.J_1991_25,
+):
     """
-    Converts star epoch from J1991.25 (Hipparcos) to J2000
+    Converts star epoch to J2000
 
     Returns: ra, dec
     """
@@ -292,11 +315,13 @@ def to_j2000(ra_degrees, dec_degrees, ra_mas_per_year, dec_mas_per_year):
         star_kwargs["ra_mas_per_year"] = ra_mas_per_year
     if dec_mas_per_year:
         star_kwargs["dec_mas_per_year"] = dec_mas_per_year
+    if parallax_mas is not None:
+        star_kwargs["parallax_mas"] = parallax_mas
 
     star = Star(
         ra_hours=ra_degrees / 15,
         dec_degrees=dec_degrees,
-        epoch=Epoch.J_1991_25,
+        epoch=epoch,
         **star_kwargs,
     )
 
