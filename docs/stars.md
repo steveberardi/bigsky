@@ -35,7 +35,7 @@ The Big Sky Star Catalog contains 2,557,499 stars compiled from the following ca
 
     \* Formula obtained from the Tycho-2 Readme
     
-    \* _if BT or VT magnitude is not available for the star in Tycho-2, then the magnitude in Big Sky is listed as VT or BT (one of these is always available in Tycho-2)_
+    \* _if BT or VT magnitude is not available for the star in Tycho-2, then the magnitude in Big Sky is listed as VT if that's available, otherwise it's listed as BT (one of these is always available in Tycho-2)_
 
 ### `bv`
 

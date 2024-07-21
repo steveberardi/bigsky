@@ -4,7 +4,7 @@ The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) c
 
 |   | Count  | Sources |
 |---|---|---|
-| **Stars** | 2,557,499  | Tycho-2 |
+| **Stars** | 2,557,499  | Hipparcos, Tycho-1, Tycho-2 |
 
 Future versions will include objects from these catalogs:
 
