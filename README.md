@@ -1,5 +1,7 @@
 # <img src="https://raw.githubusercontent.com/steveberardi/bigsky/main/docs/images/logo.svg" width="36" style="vertical-align:middle"> Big Sky Catalog
 
+<img src="docs/images/bigsky-stars.jpg">
+
 The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) catalogs, tailored for the purpose of visual observation of our beautiful night sky. Currently, it includes the following objects:
 
 |   | Count  | Sources |
