@@ -52,6 +52,7 @@ release: release-check test stars
 		v$(VERSION) \
 		build/bigsky.stars.csv.gz \
 		build/bigsky.stars.mag11.csv.gz \
+		docs/stars.md \
 		--title "v$(VERSION)" \
 		-R steveberardi/bigsky
 
