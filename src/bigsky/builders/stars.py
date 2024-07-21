@@ -398,9 +398,11 @@ def tycho2_rows():
         yield from tycho2_read(DATA_PATH / "tycho-2" / tycho_file)
 
 
-TYCHO_1 = load_tycho1_reference()
+TYCHO_1 = {}
 
 if __name__ == "__main__":
+
+    TYCHO_1 = load_tycho1_reference()
 
     hip_stars = defaultdict(list)
 
