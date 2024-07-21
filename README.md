@@ -6,7 +6,7 @@ The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) c
 
 |   | Count  | Sources | Details |
 |---|---|----|--|
-| **Stars** | 2,557,499  | Hipparcos, Tycho-1, Tycho-2 | [details](docs/stars.md) |
+| **Stars** | 2,557,499  | Hipparcos, Tycho-1, Tycho-2 | [docs](docs/stars.md) |
 
 \*_The image above was created with [Starplot](https://github.com/steveberardi/starplot), by plotting the brightest 981,852 stars from the Big Sky Catalog._
 
@@ -24,6 +24,7 @@ It's still very much a work in progress! Help is wanted and appreciated :)
 ## Data Sources
 | Name  | Source  |
 |---|---|
+| Hipparcos & Tycho-1 | [VizieR](https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239) |
 | Tycho-2 | [ESA](https://www.cosmos.esa.int/web/hipparcos/tycho-2), [VizieR](https://cdsarc.cds.unistra.fr/viz-bin/cat/I/259#/article)   |
 | Washington Double Star Catalog (WDS) | [WDS](http://www.astro.gsu.edu/wds/)  |
 | New General Catalogue (NGC) | [OpenNGC](https://github.com/mattiaverga/OpenNGC)  |
