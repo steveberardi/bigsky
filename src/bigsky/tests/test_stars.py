@@ -125,6 +125,7 @@ def test_star_row_from_tyc2_suppl_dat():
         1.77,
     ]
 
+
 def test_tycho1_reference():
     star = TYCHO_1.get(5413)
     assert star["parallax_mas"] == 1.77
