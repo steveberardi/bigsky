@@ -8,7 +8,7 @@ The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) c
 |---|---|---|
 | **Stars** | 2,557,499  | Hipparcos, Tycho-1, Tycho-2 |
 
-\*_The image above was created with [Starplot](https://github.com/steveberardi/starplot), by plotting 981,852 stars from the Big Sky Catalog._
+\*_The image above was created with [Starplot](https://github.com/steveberardi/starplot), by plotting the brightest 981,852 stars from the Big Sky Catalog._
 
 ## Roadmap
 Future versions will include objects from these catalogs:
