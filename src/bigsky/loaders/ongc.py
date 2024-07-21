@@ -11,6 +11,7 @@ filenames = [
     "addendum.csv",
 ]
 
+
 def ra_dec_to_float(ra, dec):
     ra_h, ra_m, ra_s = [float(d) for d in ra.split(":")]
     dec_d, dec_m, dec_s = [float(d) for d in dec.split(":")]
@@ -20,34 +21,44 @@ def ra_dec_to_float(ra, dec):
 
     return round(ra_f, 6), round(dec_f, 6)
 
+
+def parse_int(value):
+    value = value.strip()
+    if value:
+        return int(value)
+    else:
+        return None
+
+
 def load_ongc(datapath: str):
     count = 0
     errors = 0
     dsos = []
+    parsed = {
+        "m": set(),
+        "ic": set(),
+        "ngc": set(),
+    }
 
     for filename in filenames:
         with open(Path(datapath) / "ongc" / filename, "r") as infile:
-            reader = csv.DictReader(infile, delimiter=';')
+            reader = csv.DictReader(infile, delimiter=";")
 
             for row in reader:
                 try:
                     desig = row.get("Name").strip()
                     names = (row.get("Common names") or "").split(",")
                     ra, dec = ra_dec_to_float(row.get("RA"), row.get("Dec"))
-                    messier = row.get("M")
+                    messier = parse_int(row.get("M"))
 
                     if desig.startswith("IC"):
                         ic = int(desig[2:])
-                        ngc = int(row.get("NGC")) if row.get("NGC") else None
+                        ngc = parse_int(row.get("NGC"))
                     elif desig.startswith("NGC"):
                         ngc = int(desig[3:])
-                        ic =  int(row.get("IC")) if row.get("IC") else None
+                        ic = parse_int(row.get("IC"))
                     else:
                         print(f"Unknown desig: {desig}")
-                    
-                    if messier:
-                        messier = int(messier)
-
 
                     dsos.append(
                         dict(
@@ -62,10 +73,9 @@ def load_ongc(datapath: str):
                             m=messier,
                             major_ax=parse_float(row.get("MajAx"), r=2),
                             minor_ax=parse_float(row.get("MinAx"), r=2),
-                            pos_angle=parse_float(row.get("PosAng"), r=2)
+                            pos_angle=parse_float(row.get("PosAng"), r=2),
                         )
                     )
-
 
                 except Exception as e:
                     print(f"Error on row {str(count+1)}")
@@ -73,10 +83,9 @@ def load_ongc(datapath: str):
                     errors += 1
 
                 count += 1
-            
+
             for group in chunker(dsos, 980):
                 with db.atomic():
                     DeepSkyObject.insert_many(group).execute()
-
 
     print(f"Total Errors: {str(errors)}")

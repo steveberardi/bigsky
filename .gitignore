@@ -4,6 +4,10 @@
 raw/
 temp/
 
+
+# ephemeris files
+de421.bsp
+
 # sqlite database files
 *.db
 *.db-shm
