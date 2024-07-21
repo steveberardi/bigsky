@@ -4,9 +4,9 @@
 
 The Big Sky Catalog is a compilation of various Star and Deep Sky Object (DSO) catalogs, tailored for the purpose of visual observation of our beautiful night sky. Currently, it includes the following objects:
 
-|   | Count  | Sources |
-|---|---|---|
-| **Stars** | 2,557,499  | Hipparcos, Tycho-1, Tycho-2 |
+|   | Count  | Sources | Details |
+|---|---|----|--|
+| **Stars** | 2,557,499  | Hipparcos, Tycho-1, Tycho-2 | [details](docs/stars.md) |
 
 \*_The image above was created with [Starplot](https://github.com/steveberardi/starplot), by plotting the brightest 981,852 stars from the Big Sky Catalog._
 

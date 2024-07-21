@@ -404,8 +404,8 @@ if __name__ == "__main__":
 
     hip_stars = defaultdict(list)
 
-    outfile = open(BUILD_PATH / "tycho2.stars.csv", "w")
-    outfile_mag11 = open(BUILD_PATH / "tycho2.stars.mag11.csv", "w")
+    outfile = open(BUILD_PATH / "bigsky.stars.csv", "w")
+    outfile_mag11 = open(BUILD_PATH / "bigsky.stars.mag11.csv", "w")
 
     writer = csv.writer(outfile)
     writer_mag11 = csv.writer(outfile_mag11)

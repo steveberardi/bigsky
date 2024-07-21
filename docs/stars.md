@@ -2,6 +2,7 @@
 
 The Big Sky Star Catalog contains 2,557,499 stars compiled from the following catalogs: Hipparcos, Tycho-1, and Tycho-2. The position of each star is normalized to the J2000 Epoch, using the wonderful Python library [Skyfield](https://github.com/skyfielders/python-skyfield).
 
+For complete details of how the Big Sky Star Catalog is created, check out [`bigsky/builders/stars.py`](src/bigsky/builders/stars.py).
 
 ## Column Descriptions
 
@@ -91,7 +92,9 @@ The Big Sky Star Catalog contains 2,557,499 stars compiled from the following ca
 - This value is not available for any star in Tycho-2, so it's taken from Tycho-1 if available
 
 ## References
-
+- [Hipparcos and Tycho Catalogues - VizieR](https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239)
+- [Tycho-2 Catalogue of the 2.5 Million Brightest Stars - VizieR](https://cdsarc.cds.unistra.fr/viz-bin/cat/I/259#/article)
+- [Tycho-2 Catalogue Homepage](https://www.astro.ku.dk/~erik/Tycho-2/)
 - [Construction and verification of the Tycho-2 Catalogue](https://ui.adsabs.harvard.edu/abs/2000A%26A...357..367H/abstract)
 
 ## Spot an error?
