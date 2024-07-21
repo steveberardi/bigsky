@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from bigsky.builders.tycho import (
+from src.bigsky.builders.stars import (
     parse_float,
     parse_hip,
     format_tyc,

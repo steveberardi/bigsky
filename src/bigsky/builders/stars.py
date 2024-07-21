@@ -9,30 +9,6 @@ from skyfield.api import Star, load
 
 __version__ = "0.1.0"
 
-"""
-
-    tyc_id: Tycho ID, formatted as a string with hyphens (e.g. 0006-01005-1)
-    
-    hip_id: Hipparcos ID
-
-    ccdm: CCDM Component Identifier
-
-    magnitude: Visual apparent magnitude, calculated from BT/VT
-
-    bv: BV Color Index
-
-    ra_degrees_j2000: Right Ascension in degrees (0 to 360) and Epoch J2000.0
-
-    dec_degrees_j2000: Declination in degrees (-90 to 90) and Epoch J2000.0
-
-    ra_mas_per_year:
-
-    dec_mas_per_year:
-
-    parallax_mas:
-
-"""
-
 
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.resolve().parent.resolve().parent.resolve()

@@ -10,5 +10,5 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install dependencies
       run: make install
-    - name: Build Tycho
-      run: make tycho
+    - name: Build Stars
+      run: make stars
