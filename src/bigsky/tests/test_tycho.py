@@ -6,8 +6,10 @@ from bigsky.builders.tycho import (
     parse_float,
     parse_hip,
     format_tyc,
+    tycho2_bv_v,
     tycho2_read,
     StarRow,
+    TYCHO_1,
 )
 
 DATA_PATH = Path(__file__).parent.resolve() / "data"
@@ -20,10 +22,18 @@ DATA_PATH = Path(__file__).parent.resolve() / "data"
         ("4.56789", 2, 4.57),
         ("4.56789", 1, 4.6),
         ("4.56789", 0, 5),
+        ("     ", 2, None),
+        ("", 2, None),
+        (None, 2, None),
     ],
 )
 def test_parse_float(value, r, expected):
-    assert parse_float(value, r) == expected
+    result = parse_float(value, r)
+
+    if expected is None:
+        assert result is None
+    else:
+        assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -48,6 +58,18 @@ def test_parse_hip(value, expected):
 )
 def test_format_tyc(value, expected):
     assert format_tyc(value) == expected
+
+
+@pytest.mark.parametrize(
+    "mag_bt,mag_vt,expected_bv,expected_mag",
+    [
+        (1, 2, -0.85, 2.09),
+        (1, None, None, 1.0),
+        (None, None, None, None),
+    ],
+)
+def test_tycho2_bv_magnitude(mag_bt, mag_vt, expected_bv, expected_mag):
+    assert tycho2_bv_v(mag_bt, mag_vt) == (expected_bv, expected_mag)
 
 
 def test_star_row_header():
@@ -81,7 +103,7 @@ def test_star_row_from_tyc2_dat():
         2.2319,
         -16.3,
         -9.0,
-        None,
+        0,
     ]
 
 
@@ -95,10 +117,14 @@ def test_star_row_from_tyc2_suppl_dat():
         5413,
         "B",
         9.27,
-        -10.07,
+        None,
         17.3031,
         2.5526,
         -7.8,
         -28.5,
         1.77,
     ]
+
+def test_tycho1_reference():
+    star = TYCHO_1.get(5413)
+    assert star["parallax_mas"] == 1.77

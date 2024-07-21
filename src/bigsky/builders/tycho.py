@@ -115,6 +115,8 @@ class StarRow:
         # Observed RA/DEC
         ra = col_f(24)  # 0-360 deg
         dec = col_f(25)
+        ra_mas_per_year = col_f(4)
+        dec_mas_per_year = col_f(5)
 
         """
         Observed RA/DEC have variable epochs for RA/DEC
@@ -140,15 +142,23 @@ class StarRow:
         tyc_id = format_tyc(col(0))
         hip_id = col(23)
         ccdm = None
+
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
-            mag = HIP_MAG.get(hip_id) or mag
-            parallax_mas = PLX.get(hip_id) or None
+            tycho1 = TYCHO_1.get(hip_id) or {}
         else:
-            parallax_mas = PLX.get(tyc_id) or None
+            tycho1 = TYCHO_1.get(tyc_id) or {}
 
-        ra_mas_per_year = col_f(4)
-        dec_mas_per_year = col_f(5)
+        # Try to get magnitude from Tycho-1 because it has a better Johnson V value
+        mag = tycho1.get("magnitude") or mag
+
+        # Tycho-2 does not have parallax, so try to get it from Tycho-1
+        parallax_mas = tycho1.get("parallax_mas") or 0
+
+        # For proper motion, try Tycho-2 first, then Tycho-1, or 0 as fallback
+        ra_mas_per_year = ra_mas_per_year or tycho1.get("ra_mas_per_year") or 0
+        dec_mas_per_year = dec_mas_per_year or tycho1.get("dec_mas_per_year") or 0
+
         ra, dec = to_j2000(
             ra,
             dec,
@@ -196,10 +206,19 @@ class StarRow:
         ccdm = None
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
-            mag = HIP_MAG.get(hip_id) or mag
-            parallax_mas = PLX.get(hip_id) or None
+            tycho1 = TYCHO_1.get(hip_id) or {}
         else:
-            parallax_mas = PLX.get(tyc_id) or None
+            tycho1 = TYCHO_1.get(tyc_id) or {}
+
+        # Try to get magnitude from Tycho-1 because it has a better Johnson V value
+        mag = tycho1.get("magnitude") or mag
+
+        # Tycho-2 does not have parallax, so try to get it from Tycho-1
+        parallax_mas = tycho1.get("parallax_mas") or 0
+
+        # For proper motion, try Tycho-2 first, then Tycho-1, or 0 as fallback
+        ra_mas_per_year = ra_mas_per_year or tycho1.get("ra_mas_per_year") or 0
+        dec_mas_per_year = dec_mas_per_year or tycho1.get("dec_mas_per_year") or 0
 
         ra, dec = to_j2000(
             ra,
@@ -225,7 +244,9 @@ class StarRow:
 
 
 def parse_float(n, r=4):
-    return round(float(n or 0), r)
+    if n is None or n.strip() == "":
+        return None
+    return round(float(n), r)
 
 
 def parse_hip(hip) -> tuple[int, str]:
@@ -249,41 +270,71 @@ def parse_hip(hip) -> tuple[int, str]:
         return int(hip_id), ccdm
 
 
-def load_hip_magnitudes() -> dict:
-    """Returns dictionary where the key is the HIP id and value is its visual magnitude from Tycho-1"""
+def load_tycho1_reference() -> dict:
+    """
+    Returns dictionary in the following format:
 
-    hipmags = {}
+    {
+        "HIP_ID": {
+            "magnitude": 1,
+            "ra_mas_per_year": 1,
+            "dec_mas_per_year": 1,
+            "parallax_mas": 1,
+        },
+        ...
+        "TYC_ID": {
+            ...
+        }
+    }
+    """
+
+    reference = defaultdict(dict)
+
     with open(DATA_PATH / "tycho-1" / "hip_main.dat", "r") as hipfile:
         reader = csv.reader(hipfile, delimiter="|")
 
         for row in reader:
             hip = int(row[1].strip())
             mag = parse_float(row[5].strip())
-            hipmags[hip] = mag
-    return hipmags
-
-
-def load_tycho1_parallax() -> dict:
-    """Returns dictionary where the key is the HIP id and value is its visual magnitude from Tycho-1"""
-
-    parallax = {}
-    with open(DATA_PATH / "tycho-1" / "hip_main.dat", "r") as hipfile:
-        reader = csv.reader(hipfile, delimiter="|")
-
-        for row in reader:
-            hip = int(row[1].strip())
             parallax_mas = parse_float(row[11].strip(), 2)
-            parallax[hip] = parallax_mas
+            ra_mas_per_year = parse_float(row[12].strip(), 2)
+            dec_mas_per_year = parse_float(row[13].strip(), 2)
+
+            if mag:
+                reference[hip]["magnitude"] = mag
+
+            if parallax_mas:
+                reference[hip]["parallax_mas"] = parallax_mas
+
+            if ra_mas_per_year:
+                reference[hip]["ra_mas_per_year"] = ra_mas_per_year
+
+            if dec_mas_per_year:
+                reference[hip]["dec_mas_per_year"] = dec_mas_per_year
 
     with open(DATA_PATH / "tycho-1" / "tyc_main.dat", "r") as tycfile:
         reader = csv.reader(tycfile, delimiter="|")
 
         for row in reader:
             tyc = format_tyc(row[1].strip())
+            mag = parse_float(row[5].strip())
             parallax_mas = parse_float(row[11].strip(), 2)
-            parallax[tyc] = parallax_mas
+            ra_mas_per_year = parse_float(row[12].strip(), 2)
+            dec_mas_per_year = parse_float(row[13].strip(), 2)
 
-    return parallax
+            if mag:
+                reference[tyc]["magnitude"] = mag
+
+            if parallax_mas:
+                reference[tyc]["parallax_mas"] = parallax_mas
+
+            if ra_mas_per_year:
+                reference[tyc]["ra_mas_per_year"] = ra_mas_per_year
+
+            if dec_mas_per_year:
+                reference[tyc]["dec_mas_per_year"] = dec_mas_per_year
+
+    return reference
 
 
 def format_tyc(tyc) -> str:
@@ -371,8 +422,7 @@ def tycho2_rows():
         yield from tycho2_read(DATA_PATH / "tycho-2" / tycho_file)
 
 
-PLX = load_tycho1_parallax()
-HIP_MAG = load_hip_magnitudes()
+TYCHO_1 = load_tycho1_reference()
 
 if __name__ == "__main__":
 
