@@ -84,6 +84,7 @@ def test_star_row_header():
         "ra_mas_per_year",
         "dec_mas_per_year",
         "parallax_mas",
+        "name",
     ]
 
 
@@ -104,6 +105,7 @@ def test_star_row_from_tyc2_dat():
         -16.3,
         -9.0,
         0,
+        None,
     ]
 
 
@@ -123,6 +125,7 @@ def test_star_row_from_tyc2_suppl_dat():
         -7.8,
         -28.5,
         0,
+        None,
     ]
 
 

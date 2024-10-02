@@ -47,6 +47,7 @@ class StarRow:
     ccdm: str = None
     bv: float = None
     parallax_mas: float = None
+    name: str = None
 
     @staticmethod
     def header():
@@ -61,6 +62,7 @@ class StarRow:
             "ra_mas_per_year",
             "dec_mas_per_year",
             "parallax_mas",
+            "name",
         ]
 
     def to_row(self, r0=2, r1=4):
@@ -78,6 +80,7 @@ class StarRow:
             rounded(self.ra_mas_per_year, r1),
             rounded(self.dec_mas_per_year, r1),
             self.parallax_mas,
+            self.name,
         ]
 
     @staticmethod
@@ -118,10 +121,12 @@ class StarRow:
         tyc_id = format_tyc(col(0))
         hip_id = col(23)
         ccdm = None
+        name = None
 
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
             tycho1 = TYCHO_1.get(hip_id) or {}
+            name = IAU_NAMES.get(hip_id)
         else:
             tycho1 = TYCHO_1.get(tyc_id) or {}
 
@@ -155,6 +160,7 @@ class StarRow:
             ra_mas_per_year=ra_mas_per_year,
             dec_mas_per_year=dec_mas_per_year,
             parallax_mas=parallax_mas,
+            name=name,
         )
 
     @staticmethod
@@ -180,9 +186,12 @@ class StarRow:
         tyc_id = format_tyc(col(0))
         hip_id = col(17)
         ccdm = None
+        name = None
+
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
             tycho1 = TYCHO_1.get(hip_id) or {}
+            name = IAU_NAMES.get(hip_id)
         else:
             tycho1 = TYCHO_1.get(tyc_id) or {}
 
@@ -216,6 +225,7 @@ class StarRow:
             ra_mas_per_year=ra_mas_per_year,
             dec_mas_per_year=dec_mas_per_year,
             parallax_mas=parallax_mas,
+            name=name,
         )
 
 
@@ -244,6 +254,29 @@ def parse_hip(hip) -> tuple[int, str]:
         hip_id, ccdm, _ = re.split("([A-Z]+)", hip, flags=re.IGNORECASE)
 
         return int(hip_id), ccdm
+
+
+def load_iau_names() -> dict:
+    iau_names = {}
+
+    with open(DATA_PATH / "iau-star-names" / "iau-star-names-2024.csv") as namefile:
+        reader = csv.reader(namefile)
+        next(reader)  # first row is a header
+
+        for row in reader:
+            hip = row[2]
+            name = row[0]
+
+            if hip and hip != "0":
+                hip = int(hip)
+            else:
+                continue
+
+            iau_names[hip] = name
+
+    iau_names[39953] = "Regor"  # not officially part of IAU recognized names
+
+    return iau_names
 
 
 def load_tycho1_reference() -> dict:
@@ -399,10 +432,12 @@ def tycho2_rows():
 
 
 TYCHO_1 = {}
+IAU_NAMES = {}
 
 if __name__ == "__main__":
 
     TYCHO_1 = load_tycho1_reference()
+    IAU_NAMES = load_iau_names()
 
     hip_stars = defaultdict(list)
 
