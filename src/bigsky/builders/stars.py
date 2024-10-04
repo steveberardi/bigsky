@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from skyfield.api import Star, load
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 HERE = Path(__file__).parent.resolve()
