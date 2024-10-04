@@ -59,14 +59,5 @@ release: release-check test stars
 version: venv/bin/activate
 	@echo $(VERSION)
 
-# Deprecated? ------------------------------------------
-db: venv/bin/activate
-	@PYTHONPATH=./src/ $(PYTHON) src/bigsky/loaders/run.py raw/ dist/bigsky.db
-
-build: venv/bin/activate
-	$(PYTHON) -m flit build
-
-publish: venv/bin/activate
-	$(PYTHON) -m flit publish
 
 .PHONY: clean example db test stars release release-check
