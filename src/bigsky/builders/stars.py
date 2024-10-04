@@ -49,6 +49,10 @@ class StarRow:
     parallax_mas: float = None
     name: str = None
 
+    hd_id: int = None
+    bayer: str = None
+    flamsteed: int = None
+
     @staticmethod
     def header():
         return [
@@ -63,6 +67,9 @@ class StarRow:
             "dec_mas_per_year",
             "parallax_mas",
             "name",
+            "hd_id",
+            "bayer",
+            "flamsteed",
         ]
 
     def to_row(self, r0=2, r1=4):
@@ -81,6 +88,9 @@ class StarRow:
             rounded(self.dec_mas_per_year, r1),
             self.parallax_mas,
             self.name,
+            self.hd_id,
+            self.bayer,
+            self.flamsteed,
         ]
 
     @staticmethod
@@ -122,11 +132,21 @@ class StarRow:
         hip_id = col(23)
         ccdm = None
         name = None
+        hd_id = None
+        flamsteed = None
+        bayer = None
 
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
             tycho1 = TYCHO_1.get(hip_id) or {}
             name = IAU_NAMES.get(hip_id)
+
+            crossref = CROSSREF.get(hip_id)
+
+            if crossref:
+                hd_id = crossref.get("hd_id")
+                flamsteed = crossref.get("flamsteed")
+                bayer = crossref.get("bayer")
         else:
             tycho1 = TYCHO_1.get(tyc_id) or {}
 
@@ -161,6 +181,9 @@ class StarRow:
             dec_mas_per_year=dec_mas_per_year,
             parallax_mas=parallax_mas,
             name=name,
+            hd_id=hd_id,
+            bayer=bayer,
+            flamsteed=flamsteed,
         )
 
     @staticmethod
@@ -187,11 +210,21 @@ class StarRow:
         hip_id = col(17)
         ccdm = None
         name = None
+        hd_id = None
+        flamsteed = None
+        bayer = None
 
         if hip_id:
             hip_id, ccdm = parse_hip(hip_id)
             tycho1 = TYCHO_1.get(hip_id) or {}
             name = IAU_NAMES.get(hip_id)
+
+            crossref = CROSSREF.get(hip_id)
+
+            if crossref:
+                hd_id = crossref.get("hd_id")
+                flamsteed = crossref.get("flamsteed")
+                bayer = crossref.get("bayer")
         else:
             tycho1 = TYCHO_1.get(tyc_id) or {}
 
@@ -226,6 +259,9 @@ class StarRow:
             dec_mas_per_year=dec_mas_per_year,
             parallax_mas=parallax_mas,
             name=name,
+            hd_id=hd_id,
+            bayer=bayer,
+            flamsteed=flamsteed,
         )
 
 
@@ -277,6 +313,78 @@ def load_iau_names() -> dict:
     iau_names[39953] = "Regor"  # not officially part of IAU recognized names
 
     return iau_names
+
+
+def greek(s):
+    if not s:
+        return None
+
+    alphabet = {
+        "alf": "α",
+        "bet": "β",
+        "gam": "γ",
+        "del": "δ",
+        "eps": "ε",
+        "zet": "ζ",
+        "eta": "η",
+        "the": "θ",
+        "iot": "ι",
+        "kap": "κ",
+        "lam": "λ",
+        "mu.": "μ",
+        "nu.": "ν",
+        "ksi": "ξ",
+        "omi": "ο",
+        "pi.": "π",
+        "rho": "ρ",
+        "sig": "σ",
+        "tau": "τ",
+        "ups": "υ",
+        "phi": "φ",
+        "chi": "χ",
+        "psi": "ψ",
+        "ome": "ω",
+    }
+    nums_super = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+    nums = {str(i): n for i, n in enumerate(nums_super)}
+
+    s = s.strip()
+
+    letter = alphabet.get(s[0:3])
+
+    if letter is None:
+        return None
+
+    if len(s) > 3:
+        num_original = int(s[3:])
+        num_result = "".join([nums.get(n) for n in str(num_original)])
+        return letter + num_result
+
+    return letter
+
+
+def load_crossref() -> dict:
+    crossref = {}
+
+    with open(DATA_PATH / "IV_27A" / "catalog.dat") as crossref_file:
+        for row in crossref_file:
+            hd_id = row[:7].strip()
+            hip_id = row[31:38].strip()
+
+            if not hip_id or hip_id == "0":
+                continue
+
+            hip_id = int(hip_id)
+            flamsteed = row[64:68].strip()
+            bayer = row[68:74].strip()
+
+            crossref[hip_id] = {
+                "hd_id": int(hd_id) if hd_id else None,
+                "flamsteed": int(flamsteed) if flamsteed else None,
+                "bayer": greek(bayer) if bayer else None,
+            }
+
+    return crossref
 
 
 def load_tycho1_reference() -> dict:
@@ -433,11 +541,13 @@ def tycho2_rows():
 
 TYCHO_1 = {}
 IAU_NAMES = {}
+CROSSREF = {}
 
 if __name__ == "__main__":
 
     TYCHO_1 = load_tycho1_reference()
     IAU_NAMES = load_iau_names()
+    CROSSREF = load_crossref()
 
     hip_stars = defaultdict(list)
 

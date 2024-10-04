@@ -10,6 +10,7 @@ from src.bigsky.builders.stars import (
     tycho2_read,
     StarRow,
     TYCHO_1,
+    greek,
 )
 
 DATA_PATH = Path(__file__).parent.resolve() / "data"
@@ -72,6 +73,27 @@ def test_tycho2_bv_magnitude(mag_bt, mag_vt, expected_bv, expected_mag):
     assert tycho2_bv_v(mag_bt, mag_vt) == (expected_bv, expected_mag)
 
 
+@pytest.mark.parametrize(
+    "in_string,expected",
+    [
+        ("omi02", "ο²"),
+        ("alf09", "α⁹"),
+        ("pi.", "π"),
+        ("pi.12", "π¹²"),
+        ("stuff", None),
+        (None, None),
+        ("A01", None),
+    ],
+)
+def test_greek_letter(in_string, expected):
+    result = greek(in_string)
+
+    if expected is None:
+        assert result is None
+    else:
+        assert result == expected
+
+
 def test_star_row_header():
     assert StarRow.header() == [
         "tyc_id",
@@ -85,6 +107,9 @@ def test_star_row_header():
         "dec_mas_per_year",
         "parallax_mas",
         "name",
+        "hd_id",
+        "bayer",
+        "flamsteed",
     ]
 
 
@@ -106,6 +131,9 @@ def test_star_row_from_tyc2_dat():
         -9.0,
         0,
         None,
+        None,
+        None,
+        None,
     ]
 
 
@@ -125,6 +153,9 @@ def test_star_row_from_tyc2_suppl_dat():
         -7.8,
         -28.5,
         0,
+        None,
+        None,
+        None,
         None,
     ]
 
