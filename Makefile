@@ -26,6 +26,9 @@ venv/bin/activate: requirements.txt
 shell: venv/bin/activate
 	@PYTHONPATH=./src/ $(PYTHON)
 
+scratchpad: venv/bin/activate
+	@PYTHONPATH=./src/ $(PYTHON) scratchpad.py
+
 clean:
 	rm -rf __pycache__
 	rm -rf venv
