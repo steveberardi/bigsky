@@ -110,6 +110,7 @@ def test_star_row_header():
         "hd_id",
         "bayer",
         "flamsteed",
+        "constellation",
     ]
 
 
@@ -134,6 +135,7 @@ def test_star_row_from_tyc2_dat():
         None,
         None,
         None,
+        "psc",
     ]
 
 
@@ -157,6 +159,7 @@ def test_star_row_from_tyc2_suppl_dat():
         None,
         None,
         None,
+        "cet",
     ]
 
 

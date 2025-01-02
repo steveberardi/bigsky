@@ -3,11 +3,13 @@ import re
 import os
 from pathlib import Path
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from skyfield.api import Star, load
+from skyfield.api import Star, load, position_of_radec, load_constellation_map
 
-__version__ = "0.2.0"
+from bigsky import __version__ as VERSION
+
+constellation_at = load_constellation_map()
 
 
 HERE = Path(__file__).parent.resolve()
@@ -52,6 +54,11 @@ class StarRow:
     hd_id: int = None
     bayer: str = None
     flamsteed: int = None
+    constellation: str = field(init=False)
+
+    def __post_init__(self):
+        pos = position_of_radec(self.ra_degrees_j2000 / 15, self.dec_degrees_j2000)
+        self.constellation = constellation_at(pos).lower()
 
     @staticmethod
     def header():
@@ -70,6 +77,7 @@ class StarRow:
             "hd_id",
             "bayer",
             "flamsteed",
+            "constellation",
         ]
 
     def to_row(self, r0=2, r1=4):
@@ -91,6 +99,7 @@ class StarRow:
             self.hd_id,
             self.bayer,
             self.flamsteed,
+            self.constellation,
         ]
 
     @staticmethod
@@ -551,8 +560,8 @@ if __name__ == "__main__":
 
     hip_stars = defaultdict(list)
 
-    outfile = open(BUILD_PATH / "bigsky.stars.csv", "w")
-    outfile_mag11 = open(BUILD_PATH / "bigsky.stars.mag11.csv", "w")
+    outfile = open(BUILD_PATH / f"bigsky.{VERSION}.stars.csv", "w")
+    outfile_mag11 = open(BUILD_PATH / f"bigsky.{VERSION}.stars.mag11.csv", "w")
 
     writer = csv.writer(outfile)
     writer_mag11 = csv.writer(outfile_mag11)

@@ -114,6 +114,11 @@ For complete details of how the Big Sky Star Catalog is created, check out [`big
 - Flamsteed number, if available
 
 
+### `constellation`
+
+- _String_
+- Constellation the star belongs to, as 3-letter IAU abbreviation
+
 ## References
 - [Hipparcos and Tycho Catalogues - VizieR](https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239)
 - [Tycho-2 Catalogue of the 2.5 Million Brightest Stars - VizieR](https://cdsarc.cds.unistra.fr/viz-bin/cat/I/259#/article)
