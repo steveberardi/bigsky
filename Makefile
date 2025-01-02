@@ -37,8 +37,6 @@ clean:
 stars: venv/bin/activate
 	@mkdir -p build
 	@PYTHONPATH=./src/ $(PYTHON) src/bigsky/builders/stars.py
-	@gzip -fk build/bigsky.stars.csv
-	@gzip -fk build/bigsky.stars.mag11.csv
 
 # Releases ------------------------------------------
 release-check:
@@ -50,7 +48,9 @@ release-check:
 		false; \
 	fi
 
-release: release-check test stars
+release: release-check test 
+	@gzip -fk build/bigsky.$(VERSION).stars.csv
+	@gzip -fk build/bigsky.$(VERSION).stars.mag11.csv
 	gh release create \
 		v$(VERSION) \
 		build/bigsky.$(VERSION).stars.csv.gz \
