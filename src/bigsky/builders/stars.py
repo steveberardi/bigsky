@@ -24,6 +24,16 @@ earth = planets["earth"]
 
 ts = load.timescale()
 
+EXTRA_STARS = [
+    # Xi Ursae Majoris - Alula Australis
+    # This star is missing from the Tycho catalogs, so we manually list it here
+    # https://en.wikipedia.org/wiki/Xi_Ursae_Majoris
+    # https://hipparcos-tools.cosmos.esa.int/cgi-bin/HIPcatalogueSearch.pl?hipId=55203&hdId=&tyc1=&tyc2=&tyc3=
+    dict(
+        hip=55203, ra=169.54683, dec=31.530778, mag_v=4.264, bv=0.606, epoch="J1991.25"
+    )
+]
+
 
 class Epoch:
     J_2000 = ts.tt(2000)
@@ -261,6 +271,70 @@ class StarRow:
             hip_id=hip_id,
             ccdm=ccdm,
             magnitude=mag,
+            bv=bv,
+            ra_degrees_j2000=ra,
+            dec_degrees_j2000=dec,
+            ra_mas_per_year=ra_mas_per_year,
+            dec_mas_per_year=dec_mas_per_year,
+            parallax_mas=parallax_mas,
+            name=name,
+            hd_id=hd_id,
+            bayer=bayer,
+            flamsteed=flamsteed,
+        )
+
+    @staticmethod
+    def from_extra(d):
+        ra = d.get("ra")  # 0-360 deg
+        dec = d.get("dec")
+
+        if not ra or not dec:
+            return None
+
+        mag_v = d.get("mag_v")
+        bv = d.get("bv")
+
+        tyc_id = d.get("tyc")
+        hip_id = d.get("hip")
+        ccdm = None
+        name = None
+        hd_id = None
+        flamsteed = None
+        bayer = None
+
+        if hip_id:
+            tycho1 = TYCHO_1.get(hip_id) or {}
+            name = IAU_NAMES.get(hip_id)
+            crossref = CROSSREF.get(hip_id)
+
+            if crossref:
+                hd_id = crossref.get("hd_id")
+                flamsteed = crossref.get("flamsteed")
+                bayer = crossref.get("bayer")
+        else:
+            tycho1 = TYCHO_1.get(tyc_id) or {}
+
+        # try to get parallax from Tycho-1
+        parallax_mas = tycho1.get("parallax_mas") or 0
+
+        # For proper motion, try Tycho-1, or 0 as fallback
+        ra_mas_per_year = tycho1.get("ra_mas_per_year") or 0
+        dec_mas_per_year = tycho1.get("dec_mas_per_year") or 0
+
+        ra, dec = to_j2000(
+            ra,
+            dec,
+            ra_mas_per_year,
+            dec_mas_per_year,
+            parallax_mas=parallax_mas,
+            epoch=Epoch.J_1991_25,
+        )
+
+        return StarRow(
+            tyc_id=tyc_id,
+            hip_id=hip_id,
+            ccdm=ccdm,
+            magnitude=mag_v,
             bv=bv,
             ra_degrees_j2000=ra,
             dec_degrees_j2000=dec,
@@ -573,6 +647,26 @@ if __name__ == "__main__":
     errors = 0
     no_radec = 0
     tychos = range(0, 20)
+
+    for s in EXTRA_STARS:
+        count += 1
+
+        try:
+            output_row = StarRow.from_extra(s)
+
+            if output_row is None:
+                no_radec += 1
+                continue
+
+            writer.writerow(output_row.to_row())
+
+            if output_row.magnitude <= 11:
+                writer_mag11.writerow(output_row.to_row())
+
+        except Exception as e:
+            print(f"Error on row {str(count+1)}")
+            print(e)
+            errors += 1
 
     for row in tycho2_rows():
         count += 1
