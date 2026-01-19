@@ -1,5 +1,5 @@
 peewee==3.16.3
-skyfield==1.49
+skyfield==1.54
 black==24.4.2
 pytest==8.2.2
 pytest-cov==5.0.0

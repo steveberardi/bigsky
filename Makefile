@@ -51,13 +51,13 @@ release-check:
 release: release-check test 
 	@gzip -fk build/bigsky.$(VERSION).stars.csv
 	@gzip -fk build/bigsky.$(VERSION).stars.mag11.csv
-	gh release create \
-		v$(VERSION) \
-		build/bigsky.$(VERSION).stars.csv.gz \
-		build/bigsky.$(VERSION).stars.mag11.csv.gz \
-		docs/stars.md \
-		--title "v$(VERSION)" \
-		-R steveberardi/bigsky
+# 	gh release create \
+# 		v$(VERSION) \
+# 		build/bigsky.$(VERSION).stars.csv.gz \
+# 		build/bigsky.$(VERSION).stars.mag11.csv.gz \
+# 		docs/stars.md \
+# 		--title "v$(VERSION)" \
+# 		-R steveberardi/bigsky
 
 version: venv/bin/activate
 	@echo $(VERSION)

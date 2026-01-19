@@ -3,7 +3,7 @@
 # raw data
 raw/
 temp/
-
+data/
 
 # ephemeris files
 de421.bsp

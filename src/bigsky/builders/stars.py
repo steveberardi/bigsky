@@ -15,7 +15,7 @@ constellation_at = load_constellation_map()
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.resolve().parent.resolve().parent.resolve()
 
-DATA_PATH = os.environ.get("BIG_SKY_DATA_PATH") or ROOT / "raw"
+DATA_PATH = os.environ.get("BIG_SKY_DATA_PATH") or ROOT / "data"
 BUILD_PATH = os.environ.get("BIG_SKY_BUILD_PATH") or ROOT / "build"
 
 
@@ -24,13 +24,17 @@ earth = planets["earth"]
 
 ts = load.timescale()
 
+# These stars are missing from the Tycho catalogs, so we manually list them here
 EXTRA_STARS = [
     # Xi Ursae Majoris - Alula Australis
-    # This star is missing from the Tycho catalogs, so we manually list it here
     # https://en.wikipedia.org/wiki/Xi_Ursae_Majoris
     # https://hipparcos-tools.cosmos.esa.int/cgi-bin/HIPcatalogueSearch.pl?hipId=55203&hdId=&tyc1=&tyc2=&tyc3=
     dict(
         hip=55203, ra=169.54683, dec=31.530778, mag_v=4.264, bv=0.606, epoch="J1991.25"
+    ),
+    # Xi Scorpii
+    dict(
+        hip=78727, ra=241.090125, dec=-11.3735556, mag_v=4.16, bv=0.460, epoch="J1991.25"
     )
 ]
 
@@ -378,12 +382,12 @@ def parse_hip(hip) -> tuple[int, str]:
 def load_iau_names() -> dict:
     iau_names = {}
 
-    with open(DATA_PATH / "iau-star-names" / "iau-star-names-2024.csv") as namefile:
+    with open(DATA_PATH / "iau-star-names-19-JAN-2026.csv") as namefile:
         reader = csv.reader(namefile)
         next(reader)  # first row is a header
 
         for row in reader:
-            hip = row[2]
+            hip = row[3]
             name = row[0]
 
             if hip and hip != "0":
